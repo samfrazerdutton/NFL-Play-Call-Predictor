@@ -1,0 +1,561 @@
+@import url("https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  color-scheme: dark;
+  --bg: #12151a;
+  --panel: #191d24;
+  --panel-2: #20242c;
+  --border: rgba(245, 243, 236, 0.09);
+  --border-strong: rgba(245, 243, 236, 0.18);
+  --ink: #f5f3ec;
+  --ink-secondary: #a7aeb8;
+  --ink-muted: #6b7280;
+  --turf: #4c9a4c;
+  --turf-hover: #5cae5c;
+  --pass: #3987e5;
+  --run: #d95926;
+  --critical: #e66767;
+  --good: #0ca30c;
+  --font-display: "Teko", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--pass);
+}
+
+/* ---------------------------------------------------------------- top bar */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.wordmark .accent {
+  color: var(--turf);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.tab-btn {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.tab-btn:hover {
+  color: var(--ink);
+}
+
+.tab-btn.active {
+  background: var(--turf);
+  color: #0d130d;
+}
+
+.tab-btn:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--pass);
+  outline-offset: 2px;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.view-intro {
+  color: var(--ink-secondary);
+  max-width: 62ch;
+  margin: 0 0 22px;
+  font-size: 14.5px;
+}
+
+/* ------------------------------------------------------------- controls */
+
+.control-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field label {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+select,
+button.control {
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 9px 12px;
+}
+
+button.control {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button.control:hover {
+  border-color: var(--ink-secondary);
+}
+
+button.primary {
+  background: var(--turf);
+  border-color: var(--turf);
+  color: #0d130d;
+}
+
+button.primary:hover {
+  background: var(--turf-hover);
+}
+
+button.primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.ghost {
+  background: transparent;
+}
+
+/* --------------------------------------------------------- scoreboard strip */
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 18px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 22px;
+  margin-bottom: 22px;
+}
+
+.sb-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sb-team.away {
+  justify-content: flex-start;
+}
+
+.sb-team.home {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+.sb-team img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.sb-score {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1;
+}
+
+.sb-abbr {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-secondary);
+  letter-spacing: 0.5px;
+}
+
+.sb-mid {
+  text-align: center;
+  min-width: 160px;
+}
+
+.sb-situation {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.sb-clock {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-secondary);
+  margin-top: 4px;
+}
+
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--critical);
+  margin-right: 6px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}
+
+/* --------------------------------------------------------------- panels */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.panel + .panel {
+  margin-top: 16px;
+}
+
+.panel h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  letter-spacing: 0.2px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 760px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .scoreboard { grid-template-columns: 1fr; text-align: center; }
+  .sb-team.home, .sb-team.away { justify-content: center; flex-direction: row; }
+}
+
+/* -------------------------------------------------------- prediction meter */
+
+.meter {
+  display: flex;
+  height: 34px;
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+}
+
+.meter-seg {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.meter-seg.run {
+  background: var(--run);
+  color: #1a0f06;
+  justify-content: flex-start;
+}
+
+.meter-seg.pass {
+  background: var(--pass);
+  color: #061527;
+  justify-content: flex-end;
+}
+
+.meter-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 6px;
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-chip .swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.swatch.run { background: var(--run); }
+.swatch.pass { background: var(--pass); }
+
+/* ------------------------------------------------------------ play log */
+
+.play-log {
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 1px;
+}
+
+.play-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 70px 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.play-row .down-dist {
+  font-family: var(--font-mono);
+  color: var(--ink-secondary);
+  font-size: 12px;
+}
+
+.play-row .predicted {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.play-row .predicted.pass { color: var(--pass); }
+.play-row .predicted.run { color: var(--run); }
+
+.play-row .hit {
+  text-align: center;
+  font-size: 14px;
+}
+
+.hit.correct { color: var(--good); }
+.hit.wrong { color: var(--critical); }
+
+/* --------------------------------------------------------------- stats */
+
+.stat-row {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat .value {
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1;
+}
+
+.stat .label {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 3px;
+}
+
+/* ------------------------------------------------------------ team pick */
+
+.team-picker {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.team-picker .vs {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--ink-muted);
+}
+
+.team-select-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.team-select-card img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.team-select-card select {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 4px 0;
+}
+
+/* --------------------------------------------------------- win prob bar */
+
+.win-bar {
+  display: flex;
+  height: 46px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  margin: 14px 0 8px;
+}
+
+.win-seg {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.win-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+}
+
+.sim-progress {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  margin-top: 10px;
+}
+
+.score-hist {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 90px;
+  margin-top: 8px;
+}
+
+.score-hist .bar-pair {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 100%;
+}
+
+.score-hist .bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+}
+
+/* ----------------------------------------------------------------- misc */
+
+.empty-note {
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  padding: 20px 0;
+}
+
+.footer-note {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-muted);
+  font-size: 12.5px;
+  max-width: 68ch;
+}
+
+.footer-note a { color: var(--ink-secondary); }
+
+table.sim-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+table.sim-table th,
+table.sim-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+}
+
+table.sim-table th {
+  color: var(--ink-muted);
+  font-weight: 500;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}

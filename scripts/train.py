@@ -8,6 +8,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -42,7 +43,11 @@ def main() -> None:
     train_df, test_df = model.split_by_game(plays)
     print(f"  train: {len(train_df):,} plays | test: {len(test_df):,} plays")
 
-    X_train, personnel_categories = features.encode_features(train_df)
+    # Fix the personnel category set from the FULL dataset (not just train),
+    # so it's stable across re-splits and matches what the site's live/sim
+    # export expects downstream.
+    _, personnel_categories = features.encode_features(plays)
+    X_train, _ = features.encode_features(train_df, personnel_categories)
     X_test, _ = features.encode_features(test_df, personnel_categories)
     y_train = train_df[features.TARGET_COLUMN]
     y_test = test_df[features.TARGET_COLUMN]
@@ -50,6 +55,7 @@ def main() -> None:
     print("Training XGBoost classifier...")
     clf = model.train_model(X_train, y_train)
     model.save_model(clf)
+    model.save_feature_metadata(list(X_train.columns), personnel_categories)
 
     pred_proba = clf.predict_proba(X_test)[:, 1]
     pred_label = (pred_proba >= 0.5).astype(int)

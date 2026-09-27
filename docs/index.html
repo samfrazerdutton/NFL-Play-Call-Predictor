@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NFL Play-Call Predictor</title>
+<meta name="description" content="A gradient-boosted model predicts run vs. pass on every NFL down — replay real games, watch live games, or simulate matchups for win odds." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wordmark"><span class="accent">NFL</span> Play-Call Predictor</div>
+  <nav class="tabs" role="tablist" aria-label="View">
+    <button class="tab-btn active" data-view="replay" role="tab" aria-selected="true">Replay</button>
+    <button class="tab-btn" data-view="live" role="tab" aria-selected="false">Live</button>
+    <button class="tab-btn" data-view="simulate" role="tab" aria-selected="false">Simulate</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ======================================================= REPLAY ==== -->
+  <section id="view-replay" class="view active">
+    <p class="view-intro">
+      Step through a real game from the 2023&ndash;2025 seasons and see what the
+      model would have called on every down &mdash; before the snap &mdash; next
+      to what the offense actually did.
+    </p>
+
+    <div class="control-row">
+      <div class="field">
+        <label for="replay-season">Season</label>
+        <select id="replay-season"></select>
+      </div>
+      <div class="field">
+        <label for="replay-game">Game</label>
+        <select id="replay-game" style="min-width: 260px"></select>
+      </div>
+    </div>
+
+    <div id="replay-scoreboard" class="scoreboard" hidden></div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h2>Play log</h2>
+        <div id="replay-log" class="play-log">
+          <p class="empty-note">Pick a game above to start.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h2>Next call</h2>
+          <div id="replay-meter-wrap">
+            <p class="empty-note">&mdash;</p>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Model accuracy, this game</h2>
+          <div class="stat-row">
+            <div class="stat">
+              <div class="value" id="replay-accuracy">&mdash;</div>
+              <div class="label">correct calls</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="replay-play-count">&mdash;</div>
+              <div class="label">plays so far</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-row" style="margin-top: 16px">
+      <button class="control" id="replay-prev">&larr; Prev play</button>
+      <button class="control primary" id="replay-play">Play</button>
+      <button class="control" id="replay-next">Next play &rarr;</button>
+    </div>
+  </section>
+
+  <!-- ========================================================= LIVE ==== -->
+  <section id="view-live" class="view">
+    <p class="view-intro">
+      Pulls today's scoreboard directly from ESPN's public live-data feed
+      (fetched by your browser, not by us) and predicts the offense's next
+      call using the game's current down, distance, field position, score,
+      and time remaining. Refreshes every 15 seconds while a game is in
+      progress.
+    </p>
+
+    <div class="control-row">
+      <div class="field">
+        <label for="live-game">Today's games</label>
+        <select id="live-game" style="min-width: 320px"></select>
+      </div>
+      <div class="field">
+        <label for="live-personnel">Assumed personnel</label>
+        <select id="live-personnel"></select>
+      </div>
+      <button class="control" id="live-refresh">Refresh now</button>
+    </div>
+
+    <div id="live-scoreboard" class="scoreboard" hidden></div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h2>Recent plays</h2>
+        <div id="live-log" class="play-log">
+          <p class="empty-note">Select a live or upcoming game above.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Next call</h2>
+        <div id="live-meter-wrap">
+          <p class="empty-note">&mdash;</p>
+        </div>
+        <p class="footer-note" style="margin-top: 14px">
+          ESPN's live feed doesn't report offensive personnel groupings, so
+          live predictions use the personnel package you pick above (default:
+          11 personnel, the league's most common set) rather than the actual
+          grouping on the field.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== SIMULATE ==== -->
+  <section id="view-simulate" class="view">
+    <p class="view-intro">
+      Runs a Monte Carlo game simulation entirely in your browser: thousands
+      of simulated games built by resampling real drive outcomes (2021&ndash;2025)
+      from the field position they started at, scaled by each team's own
+      scoring and defensive drive stats.
+    </p>
+
+    <div class="team-picker">
+      <div class="team-select-card">
+        <img id="sim-away-logo" alt="" />
+        <select id="sim-away-team"></select>
+      </div>
+      <div class="vs">@</div>
+      <div class="team-select-card">
+        <img id="sim-home-logo" alt="" />
+        <select id="sim-home-team"></select>
+      </div>
+    </div>
+
+    <div class="control-row">
+      <button class="control primary" id="sim-run">Run 2,000 simulations</button>
+      <span class="sim-progress" id="sim-progress"></span>
+    </div>
+
+    <div id="sim-results" class="panel" hidden>
+      <h2>Win probability</h2>
+      <div id="sim-winbar" class="win-bar"></div>
+      <div class="win-labels">
+        <span id="sim-away-label"></span>
+        <span id="sim-tie-label"></span>
+        <span id="sim-home-label"></span>
+      </div>
+
+      <h2 style="margin-top: 24px">Projected score distribution</h2>
+      <div id="sim-hist" class="score-hist"></div>
+
+      <h2 style="margin-top: 24px">Team drive stats used</h2>
+      <table class="sim-table" id="sim-stats-table">
+        <thead>
+          <tr><th>Team</th><th>Offense index</th><th>Defense allow index</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p class="footer-note">
+      Simplifications worth knowing: each new drive's starting field position
+      is resampled from the league-wide distribution rather than chained
+      exactly from the prior play (so a pick-six return spot, for instance,
+      isn't modeled precisely); red-zone conversion rate isn't
+      team-adjusted separately from overall scoring; and overtime is a
+      simplified sudden-death coin sequence, not full NFL OT rules.
+    </p>
+  </section>
+
+</main>
+
+<script src="js/model.js"></script>
+<script src="js/data-loader.js"></script>
+<script src="js/replay.js"></script>
+<script src="js/live.js"></script>
+<script src="js/simulate.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

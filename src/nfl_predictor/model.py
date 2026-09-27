@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -51,3 +52,30 @@ def load_model(name: str = "run_pass_model") -> XGBClassifier:
     model = XGBClassifier()
     model.load_model(MODELS_DIR / f"{name}.json")
     return model
+
+
+def save_feature_metadata(
+    feature_columns: list[str],
+    personnel_categories: list[str],
+    name: str = "run_pass_model",
+) -> Path:
+    """Persist the exact feature order + personnel category set used at
+    training time, so any downstream consumer (evaluation, JS export, live
+    inference) can reproduce the same encoding deterministically."""
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    path = MODELS_DIR / f"{name}_features.json"
+    path.write_text(
+        json.dumps(
+            {
+                "feature_columns": feature_columns,
+                "personnel_categories": personnel_categories,
+            },
+            indent=2,
+        )
+    )
+    return path
+
+
+def load_feature_metadata(name: str = "run_pass_model") -> dict:
+    path = MODELS_DIR / f"{name}_features.json"
+    return json.loads(path.read_text())

@@ -73,6 +73,7 @@ def encode_features(df: pd.DataFrame, personnel_categories: list[str] | None = N
     personnel_dummies = pd.get_dummies(
         pd.Categorical(df["personnel_group"], categories=personnel_categories),
         prefix="personnel",
+        dtype="int8",
     )
     numeric = df[
         [
