@@ -7,6 +7,7 @@ models/*.json
 models/*.pkl
 output/*.png
 output/*.csv
+output/*.json
 .ipynb_checkpoints/
 *.egg-info/
 docs/server.log

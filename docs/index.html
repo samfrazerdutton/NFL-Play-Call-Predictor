@@ -15,6 +15,8 @@
     <button class="tab-btn active" data-view="replay" role="tab" aria-selected="true">Replay</button>
     <button class="tab-btn" data-view="live" role="tab" aria-selected="false">Live</button>
     <button class="tab-btn" data-view="simulate" role="tab" aria-selected="false">Simulate</button>
+    <button class="tab-btn" data-view="teams" role="tab" aria-selected="false">Teams</button>
+    <button class="tab-btn" data-view="model" role="tab" aria-selected="false">Model</button>
   </nav>
 </header>
 
@@ -182,6 +184,104 @@
     </p>
   </section>
 
+  <!-- ======================================================== TEAMS ==== -->
+  <section id="view-teams" class="view">
+    <p class="view-intro">
+      Real situational play-calling and EPA splits, computed directly from
+      2023&ndash;2025 play-by-play &mdash; not model output. The vertical
+      tick on each bar marks the league-wide rate for that same situation.
+    </p>
+
+    <div class="control-row">
+      <div class="team-select-card" style="max-width: 340px">
+        <img id="teams-logo" alt="" />
+        <select id="teams-team"></select>
+      </div>
+      <div class="toggle-pair" id="teams-side-toggle">
+        <button class="active" data-side="offense">Offense</button>
+        <button data-side="defense">Defense faced</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Predictability</h2>
+      <div id="teams-predictability" class="stat-row">
+        <p class="empty-note">Loading&hellip;</p>
+      </div>
+      <p class="footer-note" style="margin-top: 12px">
+        Rank among all 32 teams on the 2025 held-out test season: how closely
+        this offense's actual calls tracked what the league-wide model
+        expects for that situation. See the Model tab for methodology.
+      </p>
+    </div>
+
+    <div class="panel">
+      <h2>By down</h2>
+      <div class="split-grid" id="teams-by-down"></div>
+    </div>
+
+    <div class="panel">
+      <h2>By distance</h2>
+      <div class="split-grid" id="teams-by-distance"></div>
+    </div>
+
+    <div class="panel">
+      <h2>By situation</h2>
+      <div class="split-grid" id="teams-by-situation"></div>
+    </div>
+  </section>
+
+  <!-- ======================================================== MODEL ==== -->
+  <section id="view-model" class="view">
+    <p class="view-intro">
+      The model is an XGBoost gradient-boosted classifier trained on
+      situational features only (down, distance, field position, score
+      differential, time remaining, personnel). Every number below is
+      measured on a season the model never saw during training &mdash; no
+      future data ever informs the training set.
+    </p>
+
+    <div class="panel">
+      <h2 id="model-headline">Validation</h2>
+      <div class="stat-row" id="model-stats"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h2>Calibration</h2>
+        <p class="split-note">
+          If the model says "70% pass," it should actually be a pass about
+          70% of the time. The blue line should hug the dashed diagonal.
+        </p>
+        <div id="model-calibration"></div>
+      </div>
+      <div class="panel">
+        <h2>Confusion matrix</h2>
+        <table class="sim-table" id="model-confusion">
+          <tbody></tbody>
+        </table>
+        <p class="split-note" id="model-prf" style="margin-top: 10px"></p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Accuracy by down</h2>
+      <table class="sim-table" id="model-by-down">
+        <thead>
+          <tr><th>Down</th><th>n</th><th>Accuracy</th><th>Log-loss</th><th>Actual pass rate</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p class="footer-note">
+      This is a statistical model (gradient-boosted trees over hand-picked
+      features), not a language model or generative AI &mdash; every number
+      on this page is a directly computed metric on real held-out NFL plays,
+      not a generated estimate.
+    </p>
+  </section>
+
 </main>
 
 <script src="js/model.js"></script>
@@ -189,6 +289,8 @@
 <script src="js/replay.js"></script>
 <script src="js/live.js"></script>
 <script src="js/simulate.js"></script>
+<script src="js/teams.js"></script>
+<script src="js/model-eval.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

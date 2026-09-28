@@ -33,6 +33,8 @@ GAMES_DIR = DOCS_DATA / "games"
 
 REPLAY_SEASONS = [2023, 2024, 2025]  # browsable in the "Replay" tab
 SIM_SEASONS = [2021, 2022, 2023, 2024, 2025]  # drive-outcome tables for "Simulate"
+SPLITS_SEASONS = REPLAY_SEASONS  # situational splits for the "Teams" tab
+MIN_SPLIT_N = 15  # below this, a situational cell is flagged low-sample rather than hidden
 
 ESPN_ABBR_FIX = {"LA": "LAR", "WAS": "WSH"}  # nflverse -> espn, for documentation
 
@@ -297,16 +299,127 @@ def export_sim_tables() -> None:
     print(f"  {out_path} ({len(drives)} drives, {out_path.stat().st_size / 1024:.0f} KB)")
 
 
+# ---------------------------------------------------------------------------
+# team_splits.json - situational play-calling + EPA splits, for the Teams tab
+# ---------------------------------------------------------------------------
+
+DISTANCE_BUCKETS = [(0, 4, "short"), (4, 8, "medium"), (8, 100, "long")]
+
+
+def _distance_bucket(ydstogo: float) -> str:
+    for lo, hi, name in DISTANCE_BUCKETS:
+        if lo < ydstogo <= hi:
+            return name
+    return "short"
+
+
+def _situational_cell(df: pd.DataFrame) -> dict:
+    n = len(df)
+    if n == 0:
+        return {"n": 0}
+    cell = {
+        "n": int(n),
+        "pass_rate": round(float((df["play_type"] == "pass").mean()), 4),
+        "epa_per_play": round(float(df["epa"].mean()), 4) if df["epa"].notna().any() else None,
+        "low_sample": n < MIN_SPLIT_N,
+    }
+    return cell
+
+
+def _team_split_block(plays: pd.DataFrame) -> dict:
+    block = {}
+    block["by_down"] = {
+        str(int(d)): _situational_cell(g) for d, g in plays.groupby("down") if 1 <= d <= 4
+    }
+    block["by_distance"] = {
+        name: _situational_cell(plays[plays["_distance_bucket"] == name])
+        for _, _, name in DISTANCE_BUCKETS
+    }
+    block["redzone"] = _situational_cell(plays[plays["yardline_100"] <= 20])
+    if block["redzone"]["n"] > 0:
+        rz = plays[plays["yardline_100"] <= 20]
+        block["redzone"]["td_rate"] = round(float(rz["touchdown"].mean()), 4)
+    block["two_minute"] = _situational_cell(
+        plays[plays["qtr"].isin([2, 4]) & (plays["game_seconds_remaining"] % 900 <= 120)]
+    )
+    block["trailing"] = _situational_cell(plays[plays["score_differential"] < 0])
+    block["leading"] = _situational_cell(plays[plays["score_differential"] > 0])
+    block["tied"] = _situational_cell(plays[plays["score_differential"] == 0])
+    block["overall"] = _situational_cell(plays)
+    return block
+
+
+def export_team_splits() -> None:
+    raw = data.load_pbp_with_personnel(SPLITS_SEASONS)
+    plays = raw[raw["play_type"].isin(["run", "pass"])].copy()
+    plays = plays[plays["down"].notna() & plays["score_differential"].notna()]
+    plays["_distance_bucket"] = plays["ydstogo"].apply(_distance_bucket)
+
+    league = _team_split_block(plays)
+
+    offense = {}
+    for team, group in plays.groupby("posteam"):
+        offense[team] = _team_split_block(group)
+
+    defense = {}
+    for team, group in plays.groupby("defteam"):
+        defense[team] = _team_split_block(group)
+
+    payload = {
+        "seasons": SPLITS_SEASONS,
+        "min_sample_flag": MIN_SPLIT_N,
+        "league": league,
+        "offense": offense,
+        "defense": defense,
+    }
+    out_path = DOCS_DATA / "team_splits.json"
+    out_path.write_text(json.dumps(payload, separators=(",", ":")))
+    print(f"  {out_path} ({len(plays):,} plays, {out_path.stat().st_size / 1024:.0f} KB)")
+
+
+# ---------------------------------------------------------------------------
+# model_eval.json - copied from output/ (written by scripts/train.py)
+# ---------------------------------------------------------------------------
+
+
+def export_model_eval() -> None:
+    src_path = ROOT / "output" / "model_eval.json"
+    if not src_path.exists():
+        print(f"  SKIPPED - {src_path} not found (run scripts/train.py first)")
+        return
+    payload = json.loads(src_path.read_text())
+    out_path = DOCS_DATA / "model_eval.json"
+    out_path.write_text(json.dumps(payload, separators=(",", ":")))
+    print(f"  {out_path}")
+
+
+def export_team_predictability() -> None:
+    src_path = ROOT / "output" / "team_predictability.csv"
+    if not src_path.exists():
+        print(f"  SKIPPED - {src_path} not found (run scripts/train.py first)")
+        return
+    table = pd.read_csv(src_path)
+    out_path = DOCS_DATA / "team_predictability.json"
+    out_path.write_text(json.dumps(table.to_dict(orient="records"), separators=(",", ":")))
+    print(f"  {out_path} ({len(table)} teams)")
+
+
 def main() -> None:
     DOCS_DATA.mkdir(parents=True, exist_ok=True)
     print("Exporting model...")
     export_model()
+    print("Exporting model evaluation report...")
+    export_model_eval()
+    print("Exporting team predictability ranking...")
+    export_team_predictability()
     print("Exporting teams...")
     export_teams()
     print("Exporting replay games...")
     export_games()
     print("Exporting simulator drive tables...")
     export_sim_tables()
+    print("Exporting team situational splits...")
+    export_team_splits()
 
 
 if __name__ == "__main__":

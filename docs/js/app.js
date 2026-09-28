@@ -42,6 +42,30 @@ function downDistanceText(down, ydstogo, yardline100) {
   return `${ordinal(down)} & ${ydstogo} at ${side}`;
 }
 
+// Renders one situational row: a run/pass split bar (with a marker for the
+// league baseline at that same situation), sample size, and EPA/play.
+function renderSplitRow(label, cell, leagueCell) {
+  if (!cell || cell.n === 0) {
+    return `<div class="split-row"><span class="split-label">${escapeHtml(label)}</span><span class="split-note" style="margin:0">no plays</span><span></span><span></span></div>`;
+  }
+  const passPct = Math.round(cell.pass_rate * 100);
+  const leaguePct = leagueCell ? Math.round(leagueCell.pass_rate * 100) : null;
+  const epa = cell.epa_per_play;
+  const epaClass = epa == null ? "" : epa >= 0 ? "positive" : "negative";
+  const epaText = epa == null ? "—" : (epa >= 0 ? "+" : "") + epa.toFixed(2);
+  return `
+    <div class="split-row">
+      <span class="split-label">${escapeHtml(label)}${cell.low_sample ? '<span class="low-sample-tag">low n</span>' : ""}</span>
+      <div class="split-bar-track">
+        <div class="split-bar-fill" style="width:${passPct}%"></div>
+        ${leaguePct !== null ? `<div class="split-bar-marker" style="left:${leaguePct}%" title="League: ${leaguePct}% pass"></div>` : ""}
+      </div>
+      <span class="split-n">n=${cell.n}</span>
+      <span class="split-epa ${epaClass}">${epaText} epa</span>
+    </div>
+  `;
+}
+
 function teamLogoImg(abbr, size = 34) {
   const t = NFLData.team(abbr);
   const src = t ? escapeHtml(t.logo) : "";
@@ -70,6 +94,8 @@ async function boot() {
   Replay.init();
   Live.init();
   Simulate.init();
+  Teams.init();
+  ModelEval.init();
 }
 
 boot();

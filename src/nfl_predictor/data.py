@@ -34,6 +34,8 @@ PBP_COLUMNS = [
     "qb_spike",
     "two_point_attempt",
     "sack",
+    "epa",
+    "touchdown",
 ]
 
 

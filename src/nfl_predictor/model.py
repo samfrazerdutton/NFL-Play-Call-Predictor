@@ -25,7 +25,13 @@ DEFAULT_PARAMS = {
 def split_by_game(
     df: pd.DataFrame, test_size: float = 0.2, random_state: int = 42
 ):
-    """Group-split so all plays from a game land on the same side."""
+    """Group-split so all plays from a game land on the same side.
+
+    Useful for a quick in-sample sanity check, but a random split lets the
+    model see the rest of a season it's tested against (roster/scheme
+    trends leak across games within a season). Prefer split_by_time for the
+    number actually reported as "the model's accuracy".
+    """
     splitter = GroupShuffleSplit(
         n_splits=1, test_size=test_size, random_state=random_state
     )
@@ -33,6 +39,15 @@ def split_by_game(
     return df.iloc[train_idx].reset_index(drop=True), df.iloc[test_idx].reset_index(
         drop=True
     )
+
+
+def split_by_time(df: pd.DataFrame, test_season: int):
+    """Train on every season strictly before test_season, test on
+    test_season alone. No future data ever informs training - this is the
+    split whose metrics get reported as the model's real-world accuracy."""
+    train = df[df["season"] < test_season].reset_index(drop=True)
+    test = df[df["season"] == test_season].reset_index(drop=True)
+    return train, test
 
 
 def train_model(X_train: pd.DataFrame, y_train: pd.Series, **params) -> XGBClassifier:

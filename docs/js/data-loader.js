@@ -48,6 +48,18 @@ const NFLData = (() => {
     return fetchJSON("data/sim_tables.json");
   }
 
+  async function loadTeamSplits() {
+    return fetchJSON("data/team_splits.json");
+  }
+
+  async function loadModelEval() {
+    return fetchJSON("data/model_eval.json");
+  }
+
+  async function loadTeamPredictability() {
+    return fetchJSON("data/team_predictability.json");
+  }
+
   // Relative luminance -> pick black or white text for legibility on a
   // team-color background, so identity is never carried by color alone.
   function readableTextColor(hex) {
@@ -68,6 +80,9 @@ const NFLData = (() => {
     loadGamesIndex,
     loadSeasonGames,
     loadSimTables,
+    loadTeamSplits,
+    loadModelEval,
+    loadTeamPredictability,
     readableTextColor,
   };
 })();

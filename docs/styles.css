@@ -559,3 +559,147 @@ table.sim-table th {
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
+
+/* ----------------------------------------------------------- split rows */
+
+.split-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.split-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 64px 74px;
+  align-items: center;
+  gap: 12px;
+}
+
+.split-row .split-label {
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+.split-row .split-bar-track {
+  position: relative;
+  height: 22px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  background: var(--panel-2);
+}
+
+.split-row .split-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--pass);
+}
+
+.split-row .split-bar-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--ink);
+  opacity: 0.55;
+}
+
+.split-row .split-n {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  text-align: right;
+}
+
+.split-row .split-epa {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  text-align: right;
+}
+
+.split-epa.positive { color: var(--good); }
+.split-epa.negative { color: var(--critical); }
+
+.split-note {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  margin: 2px 0 14px;
+}
+
+.low-sample-tag {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 6px;
+}
+
+/* ---------------------------------------------------------- toggle pair */
+
+.toggle-pair {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.toggle-pair button {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border: none;
+  background: var(--panel-2);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.toggle-pair button.active {
+  background: var(--turf);
+  color: #0d130d;
+}
+
+/* --------------------------------------------------------- calibration */
+
+.calibration-chart {
+  width: 100%;
+  height: auto;
+}
+
+.calibration-chart .diag {
+  stroke: var(--ink-muted);
+  stroke-dasharray: 4 4;
+  stroke-width: 1.5;
+}
+
+.calibration-chart .curve {
+  fill: none;
+  stroke: var(--pass);
+  stroke-width: 2.5;
+}
+
+.calibration-chart .pt {
+  fill: var(--pass);
+}
+
+.calibration-chart .axis-label {
+  fill: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 0 6px;
+}

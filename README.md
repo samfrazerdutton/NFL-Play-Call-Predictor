@@ -17,20 +17,29 @@ predictable play-callers in the league.
    - `game_seconds_remaining` (time remaining), `qtr`
    - `personnel_group` — offense personnel collapsed to the standard
      RB/TE shorthand (e.g. `11`, `12`, `21`), one-hot encoded
-3. **Model** — an `XGBClassifier` (gradient boosted trees) trained on a
-   game-level train/test split (no game's plays appear on both sides) to
-   predict pass vs. run.
-4. **Predictability ranking** — for each team's held-out offensive plays,
-   the model's log-loss/accuracy measures how closely that offense's actual
-   calls track the league-wide situational norm. Low log-loss = the offense
-   plays "by the book" for the situation (predictable); high log-loss = the
-   offense deviates from what down/distance/field position/score/time/
-   personnel would suggest (less predictable / more creative play-calling).
+3. **Model** — an `XGBClassifier` (gradient boosted trees), validated with a
+   **time-based split**: trained on every season strictly before the test
+   season, tested only on the held-out season that follows (default: train
+   2016–2024, test 2025). No future data ever informs training — see the
+   site's **Model** tab for accuracy, log-loss, a calibration/reliability
+   diagram, a confusion matrix, and accuracy by down.
+4. **Predictability ranking** — for each team's held-out (2025) offensive
+   plays, the model's log-loss/accuracy measures how closely that offense's
+   actual calls track the league-wide situational norm. Low log-loss = the
+   offense plays "by the book" for the situation (predictable); high
+   log-loss = the offense deviates from what down/distance/field
+   position/score/time/personnel would suggest (less predictable / more
+   creative play-calling).
+5. **Situational splits** — real (not model-derived) play-calling and EPA
+   splits per team by down, distance, red zone, two-minute drill, and
+   score state, computed directly from 2023–2025 play-by-play. EPA is
+   [nflverse's](https://www.nflfastr.com/articles/nflfastR.html#expected-points-and-win-probability)
+   own expected-points-added model, not something this project computes.
 
 ## Website
 
 A static site in `docs/` (served free by GitHub Pages, no backend) puts the
-model in front of three interactive views:
+model in front of five interactive views:
 
 - **Replay** — step through any 2023–2025 game play-by-play, seeing the
   model's pre-snap prediction next to what the offense actually called.
@@ -42,12 +51,20 @@ model in front of three interactive views:
   (thousands of trials) by resampling real 2021–2025 drive outcomes by
   starting field position, scaled by each team's own offensive/defensive
   drive-scoring rates, to produce a win-probability estimate for any matchup.
+- **Teams** — real situational play-calling + EPA splits per team (by down,
+  distance, red zone, two-minute drill, score state), each compared against
+  the league baseline, plus that team's predictability rank.
+- **Model** — full transparency on the classifier itself: accuracy,
+  log-loss, Brier score, a calibration/reliability diagram, a confusion
+  matrix, and accuracy by down — all on the 2025 season the model never
+  trained on.
 
 Everything the site needs — the trained model (as a JSON tree dump the
 browser scores directly, no ML runtime required), team info, a browsable
-slice of historical games, and the simulator's drive-outcome tables — is
-static JSON exported by `scripts/export_site_data.py`. Nothing runs
-server-side; the browser does all the inference and simulation.
+slice of historical games, the simulator's drive-outcome tables, situational
+splits, and the model evaluation report — is static JSON exported by
+`scripts/export_site_data.py`. Nothing runs server-side; the browser does
+all the inference, aggregation, and simulation.
 
 ### Regenerating the site's data
 
@@ -86,17 +103,21 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-python scripts/train.py --start-season 2018 --end-season 2023
+python scripts/train.py --start-season 2016 --end-season 2025
 ```
 
-This will:
+By default this trains on every season before `--test-season` (which
+defaults to `--end-season`) and validates only on that held-out season —
+pass `--split-mode random` to fall back to the old random game-level split
+(kept for comparison, not recommended as the reported metric). This will:
 - download and cache play-by-play + participation data to `data/`
 - train the model and save it to `models/run_pass_model.json` (plus
   `models/run_pass_model_features.json`, the exact feature order/personnel
   categories used — needed by `export_site_data.py`)
 - print test accuracy/log-loss and the top-5 most/least predictable offenses
 - write `output/feature_importance.png`, `output/team_predictability.png`,
-  and `output/team_predictability.csv`
+  `output/team_predictability.csv`, and `output/model_eval.json` (the full
+  evaluation report the site's Model tab reads)
 
 Pass `--no-cache` to force a fresh data pull. Seasons before 2016 don't have
 personnel participation data available and will fall back to an `UNK`
@@ -108,8 +129,8 @@ personnel group.
 src/nfl_predictor/
   data.py          # nflreadpy loading + parquet caching
   features.py      # filtering + feature engineering
-  model.py         # train/save/load the XGBoost model
-  evaluate.py       # per-team predictability metrics
+  model.py         # train/save/load the XGBoost model, time-based split
+  evaluate.py       # predictability ranking + model evaluation report
   visualize.py      # matplotlib charts
 scripts/
   train.py             # end-to-end training pipeline
@@ -121,7 +142,10 @@ docs/                # static site (GitHub Pages) — see "Website" above
   js/replay.js         # historical replay tab
   js/live.js            # live ESPN-polling tab
   js/simulate.js         # Monte Carlo game simulator tab
-  data/                # generated — model.json, teams.json, games/, sim_tables.json
+  js/teams.js            # situational splits + predictability tab
+  js/model-eval.js       # model evaluation/calibration tab
+  data/                # generated — model.json, teams.json, games/, sim_tables.json,
+                        # team_splits.json, model_eval.json, team_predictability.json
 ```
 
 ## Known limitations
@@ -145,3 +169,9 @@ docs/                # static site (GitHub Pages) — see "Website" above
 - ESPN's scoreboard/summary endpoints are public but unofficial and
   undocumented; if ESPN changes their response format, the **Live** tab may
   need updating.
+- Situational split cells (Teams tab) with fewer than 15 plays are flagged
+  "low n" rather than hidden — read them as directional, not reliable.
+- The model is a gradient-boosted tree ensemble over hand-picked situational
+  features, not a language model — nothing on this site is generative AI,
+  and every number is a directly computed statistic or model output, not a
+  generated explanation.
