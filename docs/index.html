@@ -219,10 +219,26 @@
       </div>
     </div>
 
+    <div class="panel" style="margin-bottom: 14px">
+      <h2>What-if assumptions</h2>
+      <p class="split-note">Applied to both teams equally. Leave at 0 for the unmodified baseline.</p>
+      <div class="builder-grid">
+        <div class="field">
+          <label for="sim-adj-scoring">Scoring rate: <span id="sim-adj-scoring-val">0%</span></label>
+          <input type="range" id="sim-adj-scoring" min="-30" max="30" value="0" />
+        </div>
+        <div class="field">
+          <label for="sim-adj-turnover">Turnover/pick-six rate: <span id="sim-adj-turnover-val">0%</span></label>
+          <input type="range" id="sim-adj-turnover" min="-50" max="100" value="0" />
+        </div>
+      </div>
+    </div>
+
     <div class="control-row">
       <button class="control primary" id="sim-run">Run 2,000 simulations</button>
       <span class="sim-progress" id="sim-progress"></span>
     </div>
+    <p class="split-note" id="sim-baseline-compare" hidden style="margin-top: 6px"></p>
 
     <div id="sim-results" class="panel" hidden>
       <h2>Win probability</h2>

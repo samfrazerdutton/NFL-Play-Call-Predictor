@@ -36,7 +36,17 @@ const Simulate = (() => {
     awaySelect().addEventListener("change", updateLogos);
     homeSelect().addEventListener("change", updateLogos);
     runBtn().addEventListener("click", runSimulations);
+    document.getElementById("sim-adj-scoring").addEventListener("input", syncAdjLabels);
+    document.getElementById("sim-adj-turnover").addEventListener("input", syncAdjLabels);
+    syncAdjLabels();
     updateLogos();
+  }
+
+  function syncAdjLabels() {
+    const scoring = document.getElementById("sim-adj-scoring").value;
+    const turnover = document.getElementById("sim-adj-turnover").value;
+    document.getElementById("sim-adj-scoring-val").textContent = `${scoring > 0 ? "+" : ""}${scoring}%`;
+    document.getElementById("sim-adj-turnover-val").textContent = `${turnover > 0 ? "+" : ""}${turnover}%`;
   }
 
   function updateLogos() {
@@ -56,7 +66,7 @@ const Simulate = (() => {
     return Object.keys(dist)[0];
   }
 
-  function simulateOneGame(awayAbbr, homeAbbr) {
+  function simulateOneGame(awayAbbr, homeAbbr, adj) {
     const idx = simTables.team_indices;
     const awayIdx = idx[awayAbbr] || { offense_index: 1, defense_allow_index: 1 };
     const homeIdx = idx[homeAbbr] || { offense_index: 1, defense_allow_index: 1 };
@@ -71,12 +81,16 @@ const Simulate = (() => {
       const bucket = weightedPick(simTables.start_distribution);
       const o = simTables.bucket_outcomes[bucket];
 
-      const pSafety = o.SAFETY;
-      const pDefTd = o.DEF_TD;
-      const remaining = Math.max(1e-9, o.TD + o.FG + o.NO_SCORE);
-      const baseScoreShare = (o.TD + o.FG) / remaining;
+      // Turnover-rate assumption scales SAFETY+DEF_TD directly; everything
+      // else is renormalized into the remaining probability mass so the
+      // five outcomes still sum to 1 regardless of the adjustment.
+      const pSafety = Math.min(0.4, o.SAFETY * adj.turnoverMult);
+      const pDefTd = Math.min(0.4, o.DEF_TD * adj.turnoverMult);
+      const remaining = Math.max(1e-9, 1 - pSafety - pDefTd);
+      const baseRemaining = Math.max(1e-9, o.TD + o.FG + o.NO_SCORE);
+      const baseScoreShare = (o.TD + o.FG) / baseRemaining;
       const baseOdds = baseScoreShare / Math.max(1e-9, 1 - baseScoreShare);
-      const adjOdds = baseOdds * offIdx.offense_index * defIdx.defense_allow_index;
+      const adjOdds = baseOdds * offIdx.offense_index * defIdx.defense_allow_index * adj.scoringMult;
       const adjScoreShare = adjOdds / (1 + adjOdds);
       const tdShare = o.TD / Math.max(1e-9, o.TD + o.FG);
 
@@ -117,49 +131,92 @@ const Simulate = (() => {
     return { away: score[awayAbbr], home: score[homeAbbr] };
   }
 
-  function runSimulations() {
-    const awayAbbr = awaySelect().value;
-    const homeAbbr = homeSelect().value;
-    runBtn().disabled = true;
-    resultsEl().hidden = true;
+  function currentAdjustments() {
+    const scoringPct = Number(document.getElementById("sim-adj-scoring").value);
+    const turnoverPct = Number(document.getElementById("sim-adj-turnover").value);
+    return {
+      scoringMult: 1 + scoringPct / 100,
+      turnoverMult: Math.max(0.1, 1 + turnoverPct / 100),
+      scoringPct,
+      turnoverPct,
+    };
+  }
 
+  function runBatch(awayAbbr, homeAbbr, adj, onDone, onProgress) {
     const results = [];
     let done = 0;
-
     function chunkStep() {
       const end = Math.min(done + CHUNK, N_SIMS);
       for (let i = done; i < end; i++) {
-        results.push(simulateOneGame(awayAbbr, homeAbbr));
+        results.push(simulateOneGame(awayAbbr, homeAbbr, adj));
       }
       done = end;
-      progressEl().textContent = `${done.toLocaleString()} / ${N_SIMS.toLocaleString()} games simulated…`;
-      if (done < N_SIMS) {
-        setTimeout(chunkStep, 0);
-      } else {
-        progressEl().textContent = `${N_SIMS.toLocaleString()} games simulated.`;
-        runBtn().disabled = false;
-        renderResults(awayAbbr, homeAbbr, results);
-      }
+      if (onProgress) onProgress(done);
+      if (done < N_SIMS) setTimeout(chunkStep, 0);
+      else onDone(results);
     }
     chunkStep();
   }
 
-  function renderResults(awayAbbr, homeAbbr, results) {
-    let awayWins = 0, homeWins = 0, ties = 0;
+  function runSimulations() {
+    const awayAbbr = awaySelect().value;
+    const homeAbbr = homeSelect().value;
+    const adj = currentAdjustments();
+    const isAdjusted = adj.scoringPct !== 0 || adj.turnoverPct !== 0;
+    runBtn().disabled = true;
+    resultsEl().hidden = true;
+
+    const baselineAdj = { scoringMult: 1, turnoverMult: 1 };
+
+    if (!isAdjusted) {
+      runBatch(awayAbbr, homeAbbr, baselineAdj, (results) => {
+        progressEl().textContent = `${N_SIMS.toLocaleString()} games simulated.`;
+        runBtn().disabled = false;
+        renderResults(awayAbbr, homeAbbr, results, null);
+      }, (done) => {
+        progressEl().textContent = `${done.toLocaleString()} / ${N_SIMS.toLocaleString()} games simulated…`;
+      });
+      return;
+    }
+
+    runBatch(awayAbbr, homeAbbr, baselineAdj, (baselineResults) => {
+      runBatch(awayAbbr, homeAbbr, adj, (modifiedResults) => {
+        progressEl().textContent = `${(N_SIMS * 2).toLocaleString()} games simulated (baseline + modified).`;
+        runBtn().disabled = false;
+        renderResults(awayAbbr, homeAbbr, modifiedResults, baselineResults);
+      }, (done) => {
+        progressEl().textContent = `Modified: ${done.toLocaleString()} / ${N_SIMS.toLocaleString()}…`;
+      });
+    }, (done) => {
+      progressEl().textContent = `Baseline: ${done.toLocaleString()} / ${N_SIMS.toLocaleString()}…`;
+    });
+  }
+
+  function winRate(results) {
+    let awayWins = 0, homeWins = 0;
     let awaySum = 0, homeSum = 0;
     const margins = [];
     for (const r of results) {
       if (r.away > r.home) awayWins += 1;
       else if (r.home > r.away) homeWins += 1;
-      else ties += 1;
       awaySum += r.away;
       homeSum += r.home;
       margins.push(r.home - r.away);
     }
     const n = results.length;
-    const awayPct = Math.round((awayWins / n) * 100);
-    const homePct = Math.round((homeWins / n) * 100);
-    const tiePct = Math.max(0, 100 - awayPct - homePct);
+    return {
+      n,
+      awayPct: Math.round((awayWins / n) * 100),
+      homePct: Math.round((homeWins / n) * 100),
+      avgAway: awaySum / n,
+      avgHome: homeSum / n,
+      margins,
+    };
+  }
+
+  function renderResults(awayAbbr, homeAbbr, results, baselineResults) {
+    const stats = winRate(results);
+    const tiePct = Math.max(0, 100 - stats.awayPct - stats.homePct);
 
     const awayTeam = NFLData.team(awayAbbr);
     const homeTeam = NFLData.team(homeAbbr);
@@ -168,14 +225,28 @@ const Simulate = (() => {
 
     resultsEl().hidden = false;
     document.getElementById("sim-winbar").innerHTML = `
-      <div class="win-seg" style="width:${awayPct}%; background:${awayColor}; color:${NFLData.readableTextColor(awayColor)}">${awayPct}%</div>
-      <div class="win-seg" style="width:${homePct}%; background:${homeColor}; color:${NFLData.readableTextColor(homeColor)}; justify-content:flex-end">${homePct}%</div>
+      <div class="win-seg" style="width:${stats.awayPct}%; background:${awayColor}; color:${NFLData.readableTextColor(awayColor)}">${stats.awayPct}%</div>
+      <div class="win-seg" style="width:${stats.homePct}%; background:${homeColor}; color:${NFLData.readableTextColor(homeColor)}; justify-content:flex-end">${stats.homePct}%</div>
     `;
     document.getElementById("sim-away-label").textContent = `${awayAbbr} win`;
-    document.getElementById("sim-tie-label").textContent = tiePct > 0 ? `${tiePct}% tie` : `avg ${(awaySum / n).toFixed(1)} – ${(homeSum / n).toFixed(1)}`;
+    document.getElementById("sim-tie-label").textContent = tiePct > 0 ? `${tiePct}% tie` : `avg ${stats.avgAway.toFixed(1)} – ${stats.avgHome.toFixed(1)}`;
     document.getElementById("sim-home-label").textContent = `${homeAbbr} win`;
 
-    renderHistogram(margins, awayColor, homeColor);
+    const compareEl = document.getElementById("sim-baseline-compare");
+    if (baselineResults) {
+      const base = winRate(baselineResults);
+      compareEl.hidden = false;
+      compareEl.innerHTML = `
+        <strong>Baseline</strong> (no adjustments): ${awayAbbr} ${base.awayPct}% &middot; ${homeAbbr} ${base.homePct}% &middot; avg ${base.avgAway.toFixed(1)}–${base.avgHome.toFixed(1)}
+        &nbsp;&rarr;&nbsp;
+        <strong>Modified</strong>: ${awayAbbr} ${stats.awayPct}% &middot; ${homeAbbr} ${stats.homePct}% &middot; avg ${stats.avgAway.toFixed(1)}–${stats.avgHome.toFixed(1)}
+      `;
+    } else {
+      compareEl.hidden = true;
+      compareEl.innerHTML = "";
+    }
+
+    renderHistogram(stats.margins, awayColor, homeColor);
 
     const idx = simTables.team_indices;
     const rows = [awayAbbr, homeAbbr]

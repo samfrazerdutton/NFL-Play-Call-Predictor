@@ -64,6 +64,9 @@ both driving the same scrubber.
   (thousands of trials) by resampling real 2021–2025 drive outcomes by
   starting field position, scaled by each team's own offensive/defensive
   drive-scoring rates, to produce a win-probability estimate for any matchup.
+  Two what-if sliders (scoring rate, turnover/pick-six rate) let you rerun
+  the same matchup under different assumptions and see baseline vs.
+  modified win probabilities and average scores side by side.
 - **Teams** — real situational play-calling + EPA splits per team (by down,
   distance, red zone, two-minute drill, score state), each compared against
   the league baseline, plus that team's predictability rank.
