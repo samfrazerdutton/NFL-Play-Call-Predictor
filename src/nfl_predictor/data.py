@@ -38,6 +38,8 @@ PBP_COLUMNS = [
     "touchdown",
     "yards_gained",
     "desc",
+    "fixed_drive",
+    "fixed_drive_result",
 ]
 
 

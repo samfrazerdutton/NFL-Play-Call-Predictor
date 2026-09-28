@@ -143,6 +143,8 @@ def export_games() -> None:
                         "epa": None if pd.isna(r["epa"]) else round(float(r["epa"]), 3),
                         "yards_gained": None if pd.isna(r["yards_gained"]) else int(r["yards_gained"]),
                         "desc": (r["desc"] or "")[:180] if isinstance(r["desc"], str) else "",
+                        "drive": None if pd.isna(r["fixed_drive"]) else int(r["fixed_drive"]),
+                        "drive_result": r["fixed_drive_result"] if isinstance(r["fixed_drive_result"], str) else None,
                     }
                     for _, r in game_plays.iterrows()
                     if pd.notna(r["game_seconds_remaining"])

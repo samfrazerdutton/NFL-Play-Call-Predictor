@@ -148,10 +148,91 @@ const Situation = (() => {
     }
     const game = seasonGamesCache[season].find((g) => g.game_id === gameId);
     if (!game) return;
-    scrubState = { season, gameId, game, index: playIndex ?? 0 };
+    scrubState = { season, gameId, game, index: playIndex ?? 0, drives: computeDrives(game) };
     $("scrub-slider").max = String(Math.max(0, game.plays.length - 1));
     $("scrub-slider").value = String(scrubState.index);
     render();
+  }
+
+  // Groups a game's plays (already in play order) into real NFL drives
+  // using nflverse's own fixed_drive id, so the timeline reflects actual
+  // possessions rather than an invented grouping.
+  function computeDrives(game) {
+    const drives = [];
+    let current = null;
+    game.plays.forEach((p, idx) => {
+      if (!current || current.driveId !== p.drive) {
+        current = {
+          driveId: p.drive,
+          posteam: p.posteam,
+          result: p.drive_result,
+          startIndex: idx,
+          endIndex: idx,
+          startYardline: p.yardline_100,
+        };
+        drives.push(current);
+      } else {
+        current.endIndex = idx;
+      }
+    });
+    return drives;
+  }
+
+  function activeDrive() {
+    if (!scrubState.drives) return null;
+    return scrubState.drives.find((d) => scrubState.index >= d.startIndex && scrubState.index <= d.endIndex) || scrubState.drives[0];
+  }
+
+  function driveResultClass(result) {
+    if (!result) return "";
+    if (["Touchdown", "Field goal"].includes(result)) return "score";
+    if (["Turnover", "Turnover on downs", "Opp touchdown"].includes(result)) return "turnover";
+    return "";
+  }
+
+  function renderDriveTimeline() {
+    const drives = scrubState.drives;
+    if (!drives) return;
+    const active = activeDrive();
+    $("game-drive-timeline").innerHTML = drives.map((d) => `
+      <button class="drive-seg ${active && d.driveId === active.driveId ? "active" : ""}" data-start="${d.startIndex}">
+        <div class="ds-team">${escapeHtml(d.posteam)}</div>
+        <div class="ds-result ${driveResultClass(d.result)}">${escapeHtml(d.result || "—")}</div>
+        <div class="ds-meta">${d.endIndex - d.startIndex + 1} plays · ${yardlineLabel(d.startYardline)}</div>
+      </button>
+    `).join("");
+    $("game-drive-timeline").querySelectorAll(".drive-seg").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        scrubState.index = Number(btn.dataset.start);
+        $("scrub-slider").value = String(scrubState.index);
+        render();
+      });
+    });
+  }
+
+  function renderPlayList() {
+    const drive = activeDrive();
+    if (!drive) { $("game-play-list").innerHTML = ""; return; }
+    $("game-drive-heading").textContent = `Plays — ${drive.posteam} drive, ${drive.result || "in progress"}`;
+    const rows = [];
+    for (let i = drive.startIndex; i <= drive.endIndex; i++) {
+      const p = scrubState.game.plays[i];
+      rows.push(`
+        <div class="play-list-row ${i === scrubState.index ? "active" : ""}" data-index="${i}">
+          <span class="down-dist">${ordinal(p.down)} &amp; ${p.ydstogo}</span>
+          <span>${escapeHtml(p.desc || `${p.posteam} ${p.actual}`)}</span>
+          <span class="predicted ${p.actual}">${p.actual === "pass" ? "PASS" : "RUN"}${p.yards_gained != null ? " " + (p.yards_gained >= 0 ? "+" : "") + p.yards_gained : ""}</span>
+        </div>
+      `);
+    }
+    $("game-play-list").innerHTML = rows.join("");
+    $("game-play-list").querySelectorAll(".play-list-row").forEach((row) => {
+      row.addEventListener("click", () => {
+        scrubState.index = Number(row.dataset.index);
+        $("scrub-slider").value = String(scrubState.index);
+        render();
+      });
+    });
   }
 
   function situationFromScrub() {
@@ -211,6 +292,8 @@ const Situation = (() => {
       $("scrub-position").textContent = `Play ${scrubState.index + 1} of ${scrubState.game.plays.length}`;
       const predicted = NFLModel.predictPassProbability(sit) >= 0.5 ? "pass" : "run";
       $("scrub-accuracy").textContent = `model would have called ${predicted.toUpperCase()} — actually ${p.actual.toUpperCase()} ${predicted === p.actual ? "✓" : "✗"}`;
+      renderDriveTimeline();
+      renderPlayList();
     } else {
       $("scrub-position").textContent = "";
       $("scrub-accuracy").textContent = "";

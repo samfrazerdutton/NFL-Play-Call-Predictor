@@ -45,14 +45,17 @@ drives everything below it — a field diagram, a live play-call distribution,
 a "Why" panel that explains the number with real computed evidence (not
 generated text), a What-If comparator, and a historical-comparables search
 across 100k+ real plays. The same game state can come from two places:
-hand-built with the controls, or scrubbed play-by-play from any real
-2023–2025 game with a drag slider.
+hand-built with the controls, or scrubbed from a real 2023–2025 game via a
+**Game Center**: a drive-by-drive timeline (each drive its actual nflverse
+result — punt, TD, FG, turnover) and a play list inside it, both clickable,
+both driving the same scrubber.
 
 - **Situation** — build any down/distance/field-position/score/clock
-  combination, or drag through a real game, and watch the field, the
-  pass/run odds, the evidence behind them, and comparable historical plays
-  recompute live. Clone the current situation into a "what if" and see
-  exactly how much each change moves the model.
+  combination, or open a real game's Game Center and click through its
+  drives and plays, and watch the field, the pass/run odds, the evidence
+  behind them, and comparable historical plays recompute live. Clone the
+  current situation into a "what if" and see exactly how much each change
+  moves the model.
 - **Live** — polls [ESPN's public scoreboard API](https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard)
   directly from your browser (no server of ours involved, so it's free and
   needs no API key) and predicts the next call for any in-progress game from
