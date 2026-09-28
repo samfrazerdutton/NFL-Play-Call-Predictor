@@ -570,27 +570,11 @@ const Situation = (() => {
     $("comparables-load").addEventListener("click", async () => {
       $("comparables-load").disabled = true;
       $("comparables-load").textContent = "Loading 2023–2025 plays…";
-      await ensureAllPlaysLoaded();
+      allPlaysCache = await NFLData.loadAllPlays();
       $("comparables-load").textContent = "Find comparable plays";
       $("comparables-load").disabled = false;
       renderComparables();
     });
-  }
-
-  async function ensureAllPlaysLoaded() {
-    if (allPlaysCache) return allPlaysCache;
-    const seasons = [2023, 2024, 2025];
-    const perSeason = await Promise.all(seasons.map((s) => NFLData.loadSeasonGames(s)));
-    const flat = [];
-    perSeason.forEach((games, i) => {
-      for (const g of games) {
-        for (let idx = 0; idx < g.plays.length; idx++) {
-          flat.push({ ...g.plays[idx], game_id: g.game_id, season: seasons[i], week: g.week, playIndex: idx });
-        }
-      }
-    });
-    allPlaysCache = flat;
-    return flat;
   }
 
   function renderComparables() {

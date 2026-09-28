@@ -67,6 +67,12 @@ both driving the same scrubber.
 - **Teams** — real situational play-calling + EPA splits per team (by down,
   distance, red zone, two-minute drill, score state), each compared against
   the league baseline, plus that team's predictability rank.
+- **Stats** — a custom stat calculator: filter every 2023–2025 play by team,
+  opponent, down, distance, field position, score state, quarter, and play
+  type, and get back a real sample size, pass rate, yards/play, EPA/play,
+  and success rate — computed client-side, not looked up from a canned
+  table. Export the filtered plays as CSV, or copy a link that reproduces
+  the exact query.
 - **Model** — full transparency on the classifier itself: accuracy,
   log-loss, Brier score, a calibration/reliability diagram, a confusion
   matrix, and accuracy by down — all on the 2025 season the model never
@@ -156,6 +162,7 @@ docs/                # static site (GitHub Pages) — see "Website" above
   js/live.js            # live ESPN-polling tab
   js/simulate.js         # Monte Carlo game simulator tab
   js/teams.js            # situational splits + predictability tab
+  js/stats.js              # custom stat calculator tab
   js/model-eval.js       # model evaluation/calibration tab
   data/                # generated — model.json, teams.json, games/, sim_tables.json,
                         # team_splits.json, model_eval.json, team_predictability.json

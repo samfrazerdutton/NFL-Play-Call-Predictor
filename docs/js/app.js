@@ -95,6 +95,7 @@ async function boot() {
   Live.init();
   Simulate.init();
   Teams.init();
+  Stats.init();
   ModelEval.init();
 }
 

@@ -60,6 +60,28 @@ const NFLData = (() => {
     return fetchJSON("data/team_predictability.json");
   }
 
+  const REPLAY_SEASONS = [2023, 2024, 2025];
+  let allPlaysCache = null;
+
+  // Flattens every replay-era game's plays into one array, tagged with
+  // game_id/season/week/playIndex. Loaded on demand (~35 MB) and cached in
+  // memory so multiple features (comparables search, stat calculator) can
+  // share one fetch instead of each loading the same three season files.
+  async function loadAllPlays() {
+    if (allPlaysCache) return allPlaysCache;
+    const perSeason = await Promise.all(REPLAY_SEASONS.map((s) => loadSeasonGames(s)));
+    const flat = [];
+    perSeason.forEach((games, i) => {
+      for (const g of games) {
+        for (let idx = 0; idx < g.plays.length; idx++) {
+          flat.push({ ...g.plays[idx], game_id: g.game_id, season: REPLAY_SEASONS[i], week: g.week, playIndex: idx });
+        }
+      }
+    });
+    allPlaysCache = flat;
+    return flat;
+  }
+
   // Relative luminance -> pick black or white text for legibility on a
   // team-color background, so identity is never carried by color alone.
   function readableTextColor(hex) {
@@ -83,6 +105,7 @@ const NFLData = (() => {
     loadTeamSplits,
     loadModelEval,
     loadTeamPredictability,
+    loadAllPlays,
     readableTextColor,
   };
 })();

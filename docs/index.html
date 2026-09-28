@@ -16,6 +16,7 @@
     <button class="tab-btn" data-view="live" role="tab" aria-selected="false">Live</button>
     <button class="tab-btn" data-view="simulate" role="tab" aria-selected="false">Simulate</button>
     <button class="tab-btn" data-view="teams" role="tab" aria-selected="false">Teams</button>
+    <button class="tab-btn" data-view="stats" role="tab" aria-selected="false">Stats</button>
     <button class="tab-btn" data-view="model" role="tab" aria-selected="false">Model</button>
   </nav>
 </header>
@@ -301,6 +302,103 @@
     </div>
   </section>
 
+  <!-- ======================================================== STATS ==== -->
+  <section id="view-stats" class="view">
+    <p class="view-intro">
+      A custom stat calculator over every 2023&ndash;2025 rush/pass play.
+      Set filters, run the query against the real data client-side, and get
+      a real sample size back &mdash; not a canned statistic.
+    </p>
+
+    <div class="panel">
+      <div class="builder-grid">
+        <div class="field">
+          <label for="calc-team">Team</label>
+          <select id="calc-team"><option value="ANY">Any team</option></select>
+        </div>
+        <div class="field">
+          <label for="calc-opp">Opponent</label>
+          <select id="calc-opp"><option value="ANY">Any opponent</option></select>
+        </div>
+        <div class="field">
+          <label for="calc-down">Down</label>
+          <select id="calc-down">
+            <option value="ANY">Any down</option>
+            <option value="1">1st</option>
+            <option value="2">2nd</option>
+            <option value="3">3rd</option>
+            <option value="4">4th</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="calc-distance">Distance &ge; <span id="calc-distance-val">0</span></label>
+          <input type="range" id="calc-distance" min="0" max="20" value="0" />
+        </div>
+        <div class="field">
+          <label for="calc-field">Field position</label>
+          <select id="calc-field">
+            <option value="ANY">Anywhere</option>
+            <option value="redzone">Red zone (&le;20)</option>
+            <option value="plus_territory">Plus territory (20&ndash;40)</option>
+            <option value="midfield">Midfield (40&ndash;60)</option>
+            <option value="own_territory">Own territory (60&ndash;80)</option>
+            <option value="own_deep">Own deep (80+)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="calc-score">Score state</label>
+          <select id="calc-score">
+            <option value="ANY">Any</option>
+            <option value="trailing">Trailing</option>
+            <option value="leading">Leading</option>
+            <option value="tied">Tied</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="calc-quarter">Quarter</label>
+          <select id="calc-quarter">
+            <option value="ANY">Any</option>
+            <option value="1">Q1</option>
+            <option value="2">Q2</option>
+            <option value="3">Q3</option>
+            <option value="4">Q4</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="calc-playtype">Play type</label>
+          <select id="calc-playtype">
+            <option value="ANY">Run + Pass</option>
+            <option value="pass">Pass only</option>
+            <option value="run">Run only</option>
+          </select>
+        </div>
+      </div>
+      <div class="control-row" style="margin-top: 16px">
+        <button class="control primary" id="calc-run">Run query</button>
+        <button class="control" id="calc-export" disabled>Export CSV</button>
+        <button class="control ghost" id="calc-copy-link" disabled>Copy link to this query</button>
+        <span class="sim-progress" id="calc-status"></span>
+      </div>
+    </div>
+
+    <div class="panel" id="calc-results" hidden>
+      <h2>Result</h2>
+      <div class="stat-row" id="calc-stats"></div>
+      <h2 style="margin-top: 22px">By down</h2>
+      <table class="sim-table" id="calc-by-down">
+        <thead><tr><th>Down</th><th>n</th><th>Pass rate</th><th>Avg yards</th><th>EPA/play</th><th>Success rate</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p class="footer-note">
+      Success rate here follows the common definition: a play with positive
+      EPA. EPA is <a href="https://www.nflfastr.com/articles/nflfastR.html#expected-points-and-win-probability" target="_blank" rel="noopener">nflverse's</a>
+      own model, not something this project computes. Filters with fewer
+      than 15 plays are flagged low-sample in the results.
+    </p>
+  </section>
+
   <!-- ======================================================== MODEL ==== -->
   <section id="view-model" class="view">
     <p class="view-intro">
@@ -360,6 +458,7 @@
 <script src="js/live.js"></script>
 <script src="js/simulate.js"></script>
 <script src="js/teams.js"></script>
+<script src="js/stats.js"></script>
 <script src="js/model-eval.js"></script>
 <script src="js/app.js"></script>
 </body>
