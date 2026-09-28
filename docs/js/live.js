@@ -55,8 +55,10 @@ const Live = (() => {
         const c = e.competitions[0];
         const home = c.competitors.find((t) => t.homeAway === "home");
         const away = c.competitors.find((t) => t.homeAway === "away");
-        const status = c.status.type.shortDetail;
-        return `<option value="${e.id}">${away.team.abbreviation} @ ${home.team.abbreviation} — ${status}</option>`;
+        const status = escapeHtml(c.status.type.shortDetail);
+        const awayAbbr = escapeHtml(away.team.abbreviation);
+        const homeAbbr = escapeHtml(home.team.abbreviation);
+        return `<option value="${escapeHtml(e.id)}">${awayAbbr} @ ${homeAbbr} — ${status}</option>`;
       })
       .join("");
     if (!events.length) {
@@ -96,7 +98,9 @@ const Live = (() => {
       : state === "post"
         ? "FINAL"
         : (comp.situation ? comp.situation.shortDownDistanceText : comp.status.type.shortDetail);
-    const clockText = state === "in" ? `Q${comp.status.period}  ${comp.status.displayClock}` : (state === "in" ? "" : escapeHtml(comp.status.type.detail));
+    const clockText = state === "in"
+      ? `Q${escapeHtml(comp.status.period)}  ${escapeHtml(comp.status.displayClock)}`
+      : escapeHtml(comp.status.type.detail);
 
     scoreboardEl().innerHTML = `
       <div class="sb-team away">${teamLogoImg(awayAbbr)}<div><div class="sb-score">${escapeHtml(away.score)}</div><div class="sb-abbr">${escapeHtml(awayAbbr)}</div></div></div>

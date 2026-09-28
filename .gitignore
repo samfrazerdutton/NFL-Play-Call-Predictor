@@ -9,3 +9,4 @@ output/*.png
 output/*.csv
 .ipynb_checkpoints/
 *.egg-info/
+docs/server.log
