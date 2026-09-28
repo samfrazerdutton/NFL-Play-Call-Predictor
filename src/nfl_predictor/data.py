@@ -36,6 +36,8 @@ PBP_COLUMNS = [
     "sack",
     "epa",
     "touchdown",
+    "yards_gained",
+    "desc",
 ]
 
 

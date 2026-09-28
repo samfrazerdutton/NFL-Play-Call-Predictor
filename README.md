@@ -39,10 +39,20 @@ predictable play-callers in the league.
 ## Website
 
 A static site in `docs/` (served free by GitHub Pages, no backend) puts the
-model in front of five interactive views:
+model in front of five interactive views. The centerpiece is **Situation**:
+one persistent game state (down, distance, field position, score, clock)
+drives everything below it — a field diagram, a live play-call distribution,
+a "Why" panel that explains the number with real computed evidence (not
+generated text), a What-If comparator, and a historical-comparables search
+across 100k+ real plays. The same game state can come from two places:
+hand-built with the controls, or scrubbed play-by-play from any real
+2023–2025 game with a drag slider.
 
-- **Replay** — step through any 2023–2025 game play-by-play, seeing the
-  model's pre-snap prediction next to what the offense actually called.
+- **Situation** — build any down/distance/field-position/score/clock
+  combination, or drag through a real game, and watch the field, the
+  pass/run odds, the evidence behind them, and comparable historical plays
+  recompute live. Clone the current situation into a "what if" and see
+  exactly how much each change moves the model.
 - **Live** — polls [ESPN's public scoreboard API](https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard)
   directly from your browser (no server of ours involved, so it's free and
   needs no API key) and predicts the next call for any in-progress game from
@@ -139,7 +149,7 @@ docs/                # static site (GitHub Pages) — see "Website" above
   index.html, styles.css
   js/model.js         # in-browser XGBoost tree scorer (no ML runtime)
   js/data-loader.js   # shared fetch/team helpers
-  js/replay.js         # historical replay tab
+  js/situation.js      # game state + field + why + what-if + comparables
   js/live.js            # live ESPN-polling tab
   js/simulate.js         # Monte Carlo game simulator tab
   js/teams.js            # situational splits + predictability tab
@@ -175,3 +185,12 @@ docs/                # static site (GitHub Pages) — see "Website" above
   features, not a language model — nothing on this site is generative AI,
   and every number is a directly computed statistic or model output, not a
   generated explanation.
+- The **Situation** tab's "Why" panel shows one-at-a-time counterfactuals
+  (swap a single feature to a neutral reference value, hold everything else
+  at its current value, see how much the model's output moves) plus real
+  team/league situational splits — it's a local sensitivity readout, not a
+  formal causal decomposition, and factors aren't guaranteed to sum to the
+  total probability the way a proper Shapley/SHAP attribution would.
+- "Similar situations" ranks by a simple hand-weighted distance across down,
+  distance, field position, score, and time — not a calibrated nearest-
+  neighbor model.

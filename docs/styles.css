@@ -690,6 +690,208 @@ table.sim-table th {
   font-size: 9.5px;
 }
 
+/* ---------------------------------------------------- situation builder */
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px 18px;
+}
+
+.builder-grid input[type="range"] {
+  width: 100%;
+  accent-color: var(--turf);
+}
+
+.scrub-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+}
+
+/* ---------------------------------------------------------- state bar */
+
+.state-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 16px 24px;
+}
+
+.state-team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.state-team.home {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+.state-team img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.state-score {
+  font-family: var(--font-display);
+  font-size: 38px;
+  line-height: 1;
+}
+
+.state-abbr {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.state-center {
+  text-align: center;
+  min-width: 180px;
+}
+
+.state-downdist {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.state-clock {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-secondary);
+  margin-top: 4px;
+}
+
+.state-flags {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.state-flag {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.3px;
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.state-flag.warn {
+  color: var(--critical);
+  border-color: var(--critical);
+}
+
+/* ------------------------------------------------------------- field */
+
+.field-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.field-turf { fill: #142016; }
+.field-line { stroke: rgba(245,243,236,0.28); stroke-width: 1; }
+.field-line-major { stroke: rgba(245,243,236,0.45); stroke-width: 1.5; }
+.field-redzone { fill: rgba(217,89,38,0.12); }
+.field-yardnum { fill: rgba(245,243,236,0.4); font-family: var(--font-mono); font-size: 9px; }
+.field-los { stroke: var(--pass); stroke-width: 2.5; }
+.field-firstdown { stroke: var(--good); stroke-width: 2.5; stroke-dasharray: 5 4; }
+.field-ball { fill: var(--ink); }
+
+/* ---------------------------------------------------------- why panel */
+
+.why-row {
+  display: grid;
+  grid-template-columns: 1fr auto 90px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.why-row:last-child { border-bottom: none; }
+
+.why-label {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.why-basis {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.why-delta {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.why-delta.up { color: var(--pass); }
+.why-delta.down { color: var(--run); }
+
+.why-bar-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+
+.why-bar-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: var(--pass);
+}
+.why-bar-fill.neg { background: var(--run); }
+
+/* ------------------------------------------------------- comparables */
+
+.comparable-row {
+  display: grid;
+  grid-template-columns: 90px 130px 90px 70px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.comparable-row:hover {
+  background: var(--panel-2);
+}
+
+.comparable-row .cr-meta {
+  font-family: var(--font-mono);
+  color: var(--ink-muted);
+  font-size: 11.5px;
+}
+
+.comparable-row .cr-desc {
+  color: var(--ink-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .rank-badge {
   display: inline-flex;
   align-items: center;

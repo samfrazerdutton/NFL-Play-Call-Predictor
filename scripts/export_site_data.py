@@ -140,6 +140,9 @@ def export_games() -> None:
                         "actual": "pass" if r["play_type"] == "pass" else "run",
                         "home_score": int(r["posteam_score"]) if r["posteam"] == r["home_team"] else int(r["defteam_score"]),
                         "away_score": int(r["defteam_score"]) if r["posteam"] == r["home_team"] else int(r["posteam_score"]),
+                        "epa": None if pd.isna(r["epa"]) else round(float(r["epa"]), 3),
+                        "yards_gained": None if pd.isna(r["yards_gained"]) else int(r["yards_gained"]),
+                        "desc": (r["desc"] or "")[:180] if isinstance(r["desc"], str) else "",
                     }
                     for _, r in game_plays.iterrows()
                     if pd.notna(r["game_seconds_remaining"])

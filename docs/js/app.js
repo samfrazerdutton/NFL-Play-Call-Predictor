@@ -91,7 +91,7 @@ async function boot() {
     });
   });
 
-  Replay.init();
+  Situation.init();
   Live.init();
   Simulate.init();
   Teams.init();

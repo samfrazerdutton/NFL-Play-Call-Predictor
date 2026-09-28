@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NFL Play-Call Predictor</title>
-<meta name="description" content="A gradient-boosted model predicts run vs. pass on every NFL down — replay real games, watch live games, or simulate matchups for win odds." />
+<meta name="description" content="Build or scrub any NFL game situation and watch the play-call model, evidence, and historical comparables recompute live." />
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
 <header class="topbar">
   <div class="wordmark"><span class="accent">NFL</span> Play-Call Predictor</div>
   <nav class="tabs" role="tablist" aria-label="View">
-    <button class="tab-btn active" data-view="replay" role="tab" aria-selected="true">Replay</button>
+    <button class="tab-btn active" data-view="situation" role="tab" aria-selected="true">Situation</button>
     <button class="tab-btn" data-view="live" role="tab" aria-selected="false">Live</button>
     <button class="tab-btn" data-view="simulate" role="tab" aria-selected="false">Simulate</button>
     <button class="tab-btn" data-view="teams" role="tab" aria-selected="false">Teams</button>
@@ -22,62 +22,126 @@
 
 <main>
 
-  <!-- ======================================================= REPLAY ==== -->
-  <section id="view-replay" class="view active">
+  <!-- ==================================================== SITUATION ==== -->
+  <section id="view-situation" class="view active">
     <p class="view-intro">
-      Step through a real game from the 2023&ndash;2025 seasons and see what the
-      model would have called on every down &mdash; before the snap &mdash; next
-      to what the offense actually did.
+      Build any football situation, or drag through a real 2023&ndash;2025
+      game play by play &mdash; everything below recomputes live from
+      whatever state is on the bar: the field, the play-call odds, the
+      real evidence behind them, and comparable plays from NFL history.
     </p>
 
-    <div class="control-row">
-      <div class="field">
-        <label for="replay-season">Season</label>
-        <select id="replay-season"></select>
-      </div>
-      <div class="field">
-        <label for="replay-game">Game</label>
-        <select id="replay-game" style="min-width: 260px"></select>
+    <div class="toggle-pair" id="situation-mode-toggle">
+      <button class="active" data-mode="build">Build a situation</button>
+      <button data-mode="scrub">Scrub a real game</button>
+    </div>
+
+    <!-- Build-mode controls -->
+    <div id="situation-build-controls" class="panel" style="margin-top: 14px">
+      <div class="builder-grid">
+        <div class="field">
+          <label for="sit-team">Offense</label>
+          <select id="sit-team"></select>
+        </div>
+        <div class="field">
+          <label for="sit-opp">Defense</label>
+          <select id="sit-opp"></select>
+        </div>
+        <div class="field">
+          <label for="sit-down">Down</label>
+          <select id="sit-down">
+            <option value="1">1st</option>
+            <option value="2">2nd</option>
+            <option value="3" selected>3rd</option>
+            <option value="4">4th</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sit-distance">Distance: <span id="sit-distance-val">7</span></label>
+          <input type="range" id="sit-distance" min="1" max="25" value="7" />
+        </div>
+        <div class="field">
+          <label for="sit-yardline">Field position: <span id="sit-yardline-val"></span></label>
+          <input type="range" id="sit-yardline" min="1" max="99" value="42" />
+        </div>
+        <div class="field">
+          <label for="sit-qtr">Quarter</label>
+          <select id="sit-qtr">
+            <option value="1">Q1</option>
+            <option value="2">Q2</option>
+            <option value="3">Q3</option>
+            <option value="4" selected>Q4</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sit-clock">Clock in quarter: <span id="sit-clock-val">2:14</span></label>
+          <input type="range" id="sit-clock" min="0" max="900" value="134" />
+        </div>
+        <div class="field">
+          <label for="sit-scorediff">Score differential: <span id="sit-scorediff-val">-4</span></label>
+          <input type="range" id="sit-scorediff" min="-28" max="28" value="-4" />
+        </div>
+        <div class="field">
+          <label for="sit-personnel">Personnel</label>
+          <select id="sit-personnel"></select>
+        </div>
       </div>
     </div>
 
-    <div id="replay-scoreboard" class="scoreboard" hidden></div>
+    <!-- Scrub-mode controls -->
+    <div id="situation-scrub-controls" class="panel" style="margin-top: 14px; display: none">
+      <div class="control-row" style="margin-bottom: 4px">
+        <div class="field">
+          <label for="scrub-season">Season</label>
+          <select id="scrub-season"></select>
+        </div>
+        <div class="field" style="flex: 1; min-width: 240px">
+          <label for="scrub-game">Game</label>
+          <select id="scrub-game"></select>
+        </div>
+      </div>
+      <input type="range" id="scrub-slider" min="0" max="0" value="0" style="width: 100%" />
+      <div class="scrub-meta">
+        <span id="scrub-position">&mdash;</span>
+        <span id="scrub-accuracy"></span>
+      </div>
+    </div>
 
-    <div class="grid-2">
+    <!-- Persistent game state bar -->
+    <div class="state-bar" id="state-bar"></div>
+
+    <div class="grid-2" style="margin-top: 16px">
       <div class="panel">
-        <h2>Play log</h2>
-        <div id="replay-log" class="play-log">
-          <p class="empty-note">Pick a game above to start.</p>
-        </div>
+        <h2>Field</h2>
+        <div id="situation-field"></div>
       </div>
+      <div class="panel">
+        <h2>Play-call distribution</h2>
+        <div id="situation-spectrum"></div>
+        <p class="split-note" id="situation-drive-note" style="margin-top: 14px"></p>
+      </div>
+    </div>
 
-      <div>
-        <div class="panel">
-          <h2>Next call</h2>
-          <div id="replay-meter-wrap">
-            <p class="empty-note">&mdash;</p>
-          </div>
-        </div>
-        <div class="panel">
-          <h2>Model accuracy, this game</h2>
-          <div class="stat-row">
-            <div class="stat">
-              <div class="value" id="replay-accuracy">&mdash;</div>
-              <div class="label">correct calls</div>
-            </div>
-            <div class="stat">
-              <div class="value" id="replay-play-count">&mdash;</div>
-              <div class="label">plays so far</div>
-            </div>
-          </div>
+    <div class="grid-2" style="margin-top: 16px">
+      <div class="panel">
+        <h2>Why?</h2>
+        <div id="situation-why"></div>
+      </div>
+      <div class="panel">
+        <h2>What if?</h2>
+        <button class="control" id="whatif-toggle">Clone this situation &rarr;</button>
+        <div id="whatif-panel" style="display: none; margin-top: 14px">
+          <div class="builder-grid" id="whatif-controls"></div>
+          <div id="whatif-result" style="margin-top: 14px"></div>
         </div>
       </div>
     </div>
 
-    <div class="control-row" style="margin-top: 16px">
-      <button class="control" id="replay-prev">&larr; Prev play</button>
-      <button class="control primary" id="replay-play">Play</button>
-      <button class="control" id="replay-next">Next play &rarr;</button>
+    <div class="panel" style="margin-top: 16px">
+      <h2>Similar situations</h2>
+      <p class="split-note">Searches every 2023&ndash;2025 play for comparable down, distance, field position, and score state. Loaded on demand (~35 MB across three seasons).</p>
+      <button class="control" id="comparables-load">Find comparable plays</button>
+      <div id="comparables-results" style="margin-top: 14px"></div>
     </div>
   </section>
 
@@ -286,7 +350,7 @@
 
 <script src="js/model.js"></script>
 <script src="js/data-loader.js"></script>
-<script src="js/replay.js"></script>
+<script src="js/situation.js"></script>
 <script src="js/live.js"></script>
 <script src="js/simulate.js"></script>
 <script src="js/teams.js"></script>
